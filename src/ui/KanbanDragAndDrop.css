@@ -1,61 +1,60 @@
 /* Board scaffolding */
 .kbn-board {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  overflow-x: auto; /* Only the board is horizontally scrollable */
-  width: 100%;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    overflow-x: auto; /* Only the board is horizontally scrollable */
+    width: 100%;
 }
 
 .kbn-lane {
-  background: #d4d4d4;
-  border-radius: 8px;
-  padding: 8px;
-  /* Do NOT set overflow here! */
-  flex: 0 0 var(--lane-width, 300px);
-  display: flex;
-  flex-direction: column;
+    background: #d4d4d4;
+    border-radius: 8px;
+    padding: 8px;
+    /* Do NOT set overflow here! */
+    flex: 0 0 var(--lane-width, 300px);
+    display: flex;
+    flex-direction: column;
 }
 
 .kbn-lane-title {
-  font-weight: 600;
-  padding: 4px 8px;
+    font-weight: 600;
+    padding: 4px 8px;
 }
 
 .kbn-lane-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-height: 1px;
-
-
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 1px;
 }
 
 .kbn-card {
-  background: #fff;
-  border: 1px solid #e3e6ea;
-  border-radius: 6px;
-  padding: 8px 10px;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+    background: #fff;
+    border: 1px solid #e3e6ea;
+    border-radius: 6px;
+    padding: 8px 10px;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
 }
 
 .kbn-card--compact {
-  padding: 6px 8px;
+    padding: 6px 8px;
 }
 
 .kbn-card--dragging {
-  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Bottom sheet (per-lane) */
 .kbn-lane-bottom {
-  display: block;
-  /* base bottom sheet styling; no top-margin by default */
+    display: block;
+    /* base bottom sheet styling; no top-margin by default */
 }
 
 .kbn-lane-bottom.kbn-lane-bottom--with-cards {
-  margin-top: 8px;
+    margin-top: 8px;
 }
 
-.kbn-board--readonly .kbn-card { cursor: default; }
+.kbn-board--readonly .kbn-card {
+    cursor: default;
+}
