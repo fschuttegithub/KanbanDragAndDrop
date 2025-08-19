@@ -3,9 +3,7 @@
 
 ## What this widget does
 A drag-and-drop Kanban board for Mendix, built with `@hello-pangea/dnd`.  
-- Move cards within and between lanes using mouse, touch, or keyboard.  
-- (Optional) reorder lanes horizontally.  
-- Supports WIP limits, fractional sort keys for smooth reordering, and two persistence modes (Mendix flows or Client API).  
+- Move cards within and between lanes  
 - Optimistic UI for a snappy experience, with accessibility and auto-scroll built in.
 
 ## How the React library works (big picture)
@@ -19,17 +17,6 @@ A drag-and-drop Kanban board for Mendix, built with `@hello-pangea/dnd`.
 In this widget, lanes and cards are rendered as Droppables/Draggables, and Mendix data is updated based on the drag result.
 
 
-## Features
-[feature highlights]
-
-## Usage
-[step by step instructions]
-
-## Demo project
-[link to sandbox]
-
-## Issues, suggestions and feature requests
-[link to GitHub issues]
 
 ## Development and contribution
 
