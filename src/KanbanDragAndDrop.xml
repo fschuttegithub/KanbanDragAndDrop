@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<widget
+    id="kobeon.kanbandraganddrop.KanbanDragAndDrop"
+    pluginWidget="true"
+    needsEntityContext="true"
+    offlineCapable="true"
+    supportedPlatform="Web"
+    xmlns="http://www.mendix.com/widget/1.0/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.mendix.com/widget/1.0/ ../node_modules/mendix/custom_widget.xsd"
+>
+    <name>Kanban Drag And Drop</name>
+    <description>Drag cards between lanes with templated lane/card content.</description>
+    <icon />
+
+    <properties>
+        <propertyGroup caption="Data">
+            <property key="lanes" type="datasource" isList="true" required="true">
+                <caption>Lanes</caption>
+                <description>Datasource returning Lane objects.</description>
+            </property>
+            <property key="cards" type="datasource" isList="true" required="true">
+                <caption>Cards</caption>
+                <description>Datasource returning Card objects.</description>
+            </property>
+        </propertyGroup>
+
+        <propertyGroup caption="Mapping">
+            <property key="laneSortKeyAttr" type="attribute" dataSource="lanes" required="true">
+                <caption>Lane sort key</caption>
+                <description>Determines lane order.</description>
+                <attributeTypes>
+                    <attributeType name="Decimal" />
+                </attributeTypes>
+            </property>
+            <property key="laneGuidAttr" type="attribute" dataSource="lanes" required="true">
+                <caption>Lane identifier</caption>
+                <description>Unique lane id (passed to persist flow).</description>
+                <attributeTypes>
+                    <attributeType name="String" />
+                    <attributeType name="AutoNumber" />
+                    <attributeType name="Integer" />
+                    <attributeType name="Long" />
+                </attributeTypes>
+            </property>
+            <property key="cardSortKeyAttr" type="attribute" dataSource="cards" required="true">
+                <caption>Card sort key</caption>
+                <description>Order within a lane.</description>
+                <attributeTypes>
+                    <attributeType name="Decimal" />
+                </attributeTypes>
+            </property>
+            <property key="cardLaneRef" type="association" dataSource="cards" required="true" selectableObjects="lanes">
+                <caption>Card → Lane</caption>
+                <description>Reference from Card to Lane.</description>
+                <associationTypes>
+                    <associationType name="Reference" />
+                </associationTypes>
+            </property>
+        </propertyGroup>
+
+        <propertyGroup caption="Persist (on drop)">
+            <property key="moveTargetLaneGuid" type="attribute" required="true">
+                <caption>Target lane id (NP)</caption>
+                <description>NP attribute to receive the target lane identifier.</description>
+                <attributeTypes>
+                    <attributeType name="String" />
+                    <attributeType name="Integer" />
+                    <attributeType name="Long" />
+                </attributeTypes>
+            </property>
+            <property key="moveNewSortKey" type="attribute" required="true">
+                <caption>New sort key (NP)</caption>
+                <description>NP decimal to receive the computed sort key.</description>
+                <attributeTypes>
+                    <attributeType name="Decimal" />
+                </attributeTypes>
+            </property>
+            <property key="onPersist" type="action" dataSource="cards" required="true">
+                <caption>On persist (Card)</caption>
+                <description>Flow updates Card→Lane and SortKey, then commits.</description>
+            </property>
+        </propertyGroup>
+
+        <propertyGroup caption="Templates">
+            <property key="laneContent" type="widgets" dataSource="lanes">
+                <caption>Lane header (Lane)</caption>
+                <description>Widgets rendered in each lane header (Lane context).</description>
+            </property>
+            <property key="cardContent" type="widgets" dataSource="cards">
+                <caption>Card body (Card)</caption>
+                <description>Widgets rendered inside each card (Card context).</description>
+            </property>
+        </propertyGroup>
+
+        <propertyGroup caption="Optional layout">
+            <property key="enableLaneBottomSheet" type="boolean" defaultValue="false">
+                <caption>Enable bottomsheet</caption>
+                <description>Show a custom area at the bottom of each lane.</description>
+            </property>
+            <property key="laneBottomSheet" type="widgets" dataSource="lanes">
+                <caption>Bottom sheet content (Lane)</caption>
+                <description>Place e.g. “+ Add Card” button (Lane context).</description>
+            </property>
+            <property key="enableLaneEmptySheet" type="boolean" defaultValue="false">
+                <caption>Enable empty sheet</caption>
+                <description>Show a custom area when there are no cards in the lane.</description>
+            </property>
+            <property key="laneEmptySheet" type="widgets" dataSource="lanes">
+                <caption>Bottom sheet content (Lane)</caption>
+                <description>Place e.g. “+ Add Card” button (Lane context).</description>
+            </property>
+        </propertyGroup>
+
+        <propertyGroup caption="Appearance">
+            <property key="laneWidth" type="expression" defaultValue="300px">
+                <caption>Lane width (CSS)</caption>
+                <description>Width of each lane. Accepts CSS values like "500px", "40%" or a plain number (treated as px).</description>
+                	<returnType type="String" />
+            </property>
+            <property key="compactCards" type="boolean" defaultValue="false">
+                <caption>Compact cards</caption>
+                <description>Use compact card styling.</description>
+            </property>
+            
+        </propertyGroup>
+    </properties>
+</widget>
