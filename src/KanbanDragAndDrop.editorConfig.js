@@ -56,7 +56,7 @@ export function getPreview(values, isDarkMode) {
         ]
     };
 
-        const cardContent = {
+    const cardContent = {
         type: "Container",
         borders: true,
         children: [
@@ -68,7 +68,7 @@ export function getPreview(values, isDarkMode) {
         ]
     };
 
-        const laneBottomSheet = {
+    const laneBottomSheet = {
         type: "Container",
         borders: true,
         children: [
@@ -80,7 +80,7 @@ export function getPreview(values, isDarkMode) {
         ]
     };
 
-        const laneEmptySheet = {
+    const laneEmptySheet = {
         type: "Container",
         borders: true,
         children: [
@@ -95,7 +95,6 @@ export function getPreview(values, isDarkMode) {
     const children = [titleHeader, laneContent, cardContent];
     if (values.enableLaneBottomSheet) children.push(laneBottomSheet);
     if (values.enableLaneEmptySheet) children.push(laneEmptySheet);
-
 
     return {
         type: "Container",
