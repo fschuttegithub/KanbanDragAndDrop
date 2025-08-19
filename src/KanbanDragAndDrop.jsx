@@ -58,6 +58,13 @@ export function KanbanDragAndDrop(props) {
         return v;
     };
 
+    const resolvedLaneWidth = (() => {
+        const raw = resolveWidgetProp(props.laneWidth);
+        if (typeof raw === "string") return raw;
+        if (typeof raw === "number") return `${raw}px`;
+        return "500px";
+    })();
+
     const getLaneIdFromCard = c => {
         const laneRef = props.cardLaneRef.get(c);
         if (laneRef && (typeof laneRef.id === "string" || typeof laneRef.id === "number")) return String(laneRef.id);
@@ -240,14 +247,7 @@ export function KanbanDragAndDrop(props) {
             cardsByLane={viewCardsByLane}
             onCardMove={onCardMove}
             readOnly={isReadOnly}
-            laneWidth={
-                (function () {
-                    const raw = resolveWidgetProp(props.laneWidth);
-                    if (typeof raw === "string") return raw;
-                    if (typeof raw === "number") return `${raw}px`;
-                    return "500px";
-                })()
-            }
+            laneWidth={resolvedLaneWidth}
             compactCards={props.compactCards ?? false}
             laneContent={props.laneContent}
             cardContent={props.cardContent}
