@@ -43,6 +43,21 @@ export function KanbanDragAndDrop(props) {
         return 0;
     };
 
+    const resolveWidgetProp = v => {
+        // Mendix expression/widget props can be plain values or wrapped objects
+        if (v && typeof v === "object") {
+            if ("value" in v) return v.value;
+            if (typeof v.get === "function") {
+                try {
+                    return v.get();
+                } catch (e) {
+                    return undefined;
+                }
+            }
+        }
+        return v;
+    };
+
     const getLaneIdFromCard = c => {
         const laneRef = props.cardLaneRef.get(c);
         if (laneRef && (typeof laneRef.id === "string" || typeof laneRef.id === "number")) return String(laneRef.id);
@@ -226,11 +241,12 @@ export function KanbanDragAndDrop(props) {
             onCardMove={onCardMove}
             readOnly={isReadOnly}
             laneWidth={
-                typeof props.laneWidth === "string"
-                    ? props.laneWidth
-                    : typeof props.laneWidth === "number"
-                    ? `${props.laneWidth}px`
-                    : "500px"
+                (function () {
+                    const raw = resolveWidgetProp(props.laneWidth);
+                    if (typeof raw === "string") return raw;
+                    if (typeof raw === "number") return `${raw}px`;
+                    return "500px";
+                })()
             }
             compactCards={props.compactCards ?? false}
             laneContent={props.laneContent}

@@ -24,7 +24,7 @@ export function Lane({
             : "500px";
 
     return (
-        <div className="kbn-lane" style={{ ["--lane-width"]: laneWidthStyle }}>
+        <div className="kbn-lane" style={{ "--lane-width": laneWidthStyle }}>
             <div className="kbn-lane-title">{header}</div>
 
             <Droppable droppableId={String(lane.id)} type="CARD" isDropDisabled={readOnly}>
