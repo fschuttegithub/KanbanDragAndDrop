@@ -7,7 +7,6 @@ export function Board({
     cardsByLane,
     onCardMove,
     laneWidth,
-    compactCards,
     laneContent,
     cardContent,
     enableLaneBottomSheet,
@@ -34,7 +33,6 @@ export function Board({
                         key={lane.id}
                         lane={{ ...lane, widthCss: laneWidth }}
                         cards={cardsByLane[lane.id] || []}
-                        compactCards={compactCards}
                         laneContent={laneContent}
                         cardContent={cardContent}
                         enableLaneBottomSheet={enableLaneBottomSheet}

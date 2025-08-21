@@ -248,7 +248,6 @@ export function KanbanDragAndDrop(props) {
             onCardMove={onCardMove}
             readOnly={isReadOnly}
             laneWidth={resolvedLaneWidth}
-            compactCards={props.compactCards ?? false}
             laneContent={props.laneContent}
             cardContent={props.cardContent}
             enableLaneBottomSheet={props.enableLaneBottomSheet}

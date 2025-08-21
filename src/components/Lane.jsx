@@ -5,7 +5,6 @@ import { Card } from "./Card";
 export function Lane({
     lane,
     cards,
-    compactCards,
     laneContent,
     cardContent,
     enableLaneBottomSheet,
@@ -37,7 +36,6 @@ export function Lane({
                                       key={card.id}
                                       card={card}
                                       index={index}
-                                      compact={compactCards}
                                       cardContent={cardContent}
                                       readOnly={readOnly}
                                   />
