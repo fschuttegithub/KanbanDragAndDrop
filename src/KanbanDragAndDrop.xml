@@ -12,7 +12,6 @@
     <name>Kanban Drag And Drop</name>
     <description>Drag cards between lanes with templated lane/card content.</description>
     <icon />
-
     <properties>
         <propertyGroup caption="Data">
             <propertyGroup caption="Lanes">
@@ -38,7 +37,6 @@
                     </attributeTypes>
                 </property>
             </propertyGroup>
-
             <propertyGroup caption="Cards">
                 <property key="cards" type="datasource" isList="true" required="true">
                     <caption>Car data</caption>
@@ -67,7 +65,6 @@
                 </property>
             </propertyGroup>
         </propertyGroup>
-
         <propertyGroup caption="On drop">
             <property key="moveTargetLaneGuid" type="attribute" required="true">
                 <caption>Target lane id</caption>
@@ -86,12 +83,11 @@
                     <attributeType name="Decimal" />
                 </attributeTypes>
             </property>
-            <property key="onPersist" type="action" dataSource="cards" required="true">
+            <property key="onDrop" type="action" dataSource="cards" required="true">
                 <caption>On drop action</caption>
                 <description>Select microflow to update the Card SortKey and the Card→Lane association.</description>
             </property>
         </propertyGroup>
-
         <propertyGroup caption="Templates">
             <property key="laneContent" type="widgets" dataSource="lanes">
                 <caption>Lane header (Lane)</caption>
@@ -102,7 +98,6 @@
                 <description>Widgets rendered inside each card (Card context).</description>
             </property>
         </propertyGroup>
-
         <propertyGroup caption="Layout">
             <property key="laneWidth" type="expression" defaultValue="300px">
                 <caption>Lane width (CSS)</caption>

@@ -21,7 +21,7 @@ export function KanbanDragAndDrop(props) {
     if (!props.laneGuidAttr) missingProps.push("laneGuidAttr");
     if (!props.moveTargetLaneGuid) missingProps.push("moveTargetLaneGuid");
     if (!props.moveNewSortKey) missingProps.push("moveNewSortKey");
-    if (!props.onPersist) missingProps.push("onPersist");
+    if (!props.onDrop) missingProps.push("onDrop");
     if (missingProps.length > 0) {
         // eslint-disable-next-line no-console
         console.error(`KanbanDragAndDrop: Missing required properties: ${missingProps.join(", ")}`);
@@ -109,7 +109,7 @@ export function KanbanDragAndDrop(props) {
             out[laneId] = arr.map((x, idx) => ({ id: x.id, sortKey: idx, mxObj: x.mxObj }));
         }
         return out;
-    }, [props.cards?.items, props.cardSortKeyAttr, props.cardLaneRef, lanes]);
+    }, [props.cards?.items, props.cardSortKeyAttr, props.cardLaneRef, props.onDrop, lanes]);
 
     // -------- optimistic view & pending overlay --------
     const [viewCardsByLane, setViewCardsByLane] = useState(derivedCardsByLane);
@@ -120,8 +120,8 @@ export function KanbanDragAndDrop(props) {
         const out = {};
         for (const [k, v] of Object.entries(base)) out[k] = v.slice();
 
-        const allItems = props.cards?.items ?? [];
-        const byId = new Map(allItems.map(c => [String(c.id), c]));
+        const allCardsInBase = Object.values(base).flat();
+        const byId = new Map(allCardsInBase.map(c => [String(c.id), c.mxObj]));
 
         const removeCardFromAll = cardId => {
             for (const arr of Object.values(out)) {
@@ -161,10 +161,10 @@ export function KanbanDragAndDrop(props) {
     // -------- derive read-only from microflow security (Option A) --------
     const isReadOnly = useMemo(() => {
         const probe = props.cards?.items?.[0];
-        const a = probe ? props.onPersist?.get?.(probe) : null;
+        const a = probe ? props.onDrop?.get?.(probe) : null;
         // If there are no cards, default to read-only; when cards appear, this will recompute.
         return !a?.canExecute;
-    }, [props.cards?.items, props.onPersist]);
+    }, [props.cards?.items, props.onDrop]);
 
     // -------- local move helper --------
     const applyLocalMove = (state, fromLane, toLane, fromIdx, toIdx, cardId) => {
@@ -206,24 +206,22 @@ export function KanbanDragAndDrop(props) {
             if (!laneIdSet.has(fromLane) || !laneIdSet.has(toLane)) return;
             if (fromLane === toLane && fromIdx === toIdx) return;
 
-            const newIndex = toIdx;
-
             // Optimistic UI
-            setViewCardsByLane(prev => applyLocalMove(prev, fromLane, toLane, fromIdx, newIndex, String(draggableId)));
-            pendingMovesRef.current.set(String(draggableId), { toLane, sortKey: newIndex });
+            setViewCardsByLane(prev => applyLocalMove(prev, fromLane, toLane, fromIdx, toIdx, String(draggableId)));
+            pendingMovesRef.current.set(String(draggableId), { toLane, sortKey: toIdx });
 
             // Persist
             const cardItem = (props.cards?.items ?? []).find(i => String(i.id) === String(draggableId));
             if (!cardItem) return;
 
             const laneObj = (props.lanes?.items ?? []).find(l => String(l.id) === toLane);
-            const laneGuidValue = props.laneGuidAttr?.get?.(laneObj)?.value;
+            const laneGuidValue = props.laneGuidAttr?.get(laneObj).value;
 
-            props.moveTargetLaneGuid?.setValue?.(laneGuidValue);
-            props.moveNewSortKey?.setValue?.(new Big(newIndex)); // Decimal must be Big
-            const persistAction = props.onPersist?.get?.(cardItem);
-            if (persistAction?.canExecute) {
-                persistAction.execute();
+            props.moveTargetLaneGuid?.setValue(laneGuidValue);
+            props.moveNewSortKey?.setValue(new Big(toIdx)); // Decimal must be Big
+            const onDropAction = props.onDrop?.get(cardItem);
+            if (onDropAction?.canExecute) {
+                onDropAction.execute();
             }
         },
         [
@@ -234,7 +232,7 @@ export function KanbanDragAndDrop(props) {
             props.laneGuidAttr,
             props.moveTargetLaneGuid,
             props.moveNewSortKey,
-            props.onPersist
+            props.onDrop
         ]
     );
 
