@@ -1,10 +1,10 @@
 {
   "name": "kanbandraganddrop",
   "widgetName": "KanbanDragAndDrop",
-  "version": "1.0.0",
-  "description": "My widget description",
-  "copyright": "© Mendix Technology BV 2022. All rights reserved.",
-  "author": "Frank",
+  "version": "1.0.1",
+  "description": "",
+  "copyright": "Kobeon B.V.",
+  "author": "Frank Schutte",
   "engines": {
     "node": ">=16"
   },
@@ -25,12 +25,12 @@
     "release": "pluggable-widgets-tools release:web"
   },
   "devDependencies": {
-    "@mendix/pluggable-widgets-tools": "^10.15.0"
+    "@mendix/pluggable-widgets-tools": "^10.21.2"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
-    "classnames": "^2.2.6",
-    "big.js": "^6.2.1"
+    "big.js": "^6.2.1",
+    "classnames": "^2.2.6"
   },
   "resolutions": {
     "react": "^18.2.0",

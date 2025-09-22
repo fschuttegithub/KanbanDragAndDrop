@@ -1,4 +1,4 @@
-import React, { createElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Board } from "./components/Board";
 import Big from "big.js";
 import "./ui/KanbanDragAndDrop.css";
@@ -225,9 +225,6 @@ export function KanbanDragAndDrop(props) {
             if (persistAction?.canExecute) {
                 persistAction.execute();
             }
-
-            // Pull server updates; overlay prevents snap-back.
-            props.cards?.reload?.();
         },
         [
             isReadOnly,

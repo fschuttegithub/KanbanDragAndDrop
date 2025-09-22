@@ -1,4 +1,4 @@
-import React, { createElement, useCallback } from "react";
+import { createElement, useCallback } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Lane } from "./Lane";
 

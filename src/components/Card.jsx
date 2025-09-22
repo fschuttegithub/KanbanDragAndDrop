@@ -1,4 +1,4 @@
-import React, { createElement } from "react";
+import { createElement } from "react";
 import { Draggable } from "@hello-pangea/dnd";
 
 export function Card({ card, index, cardContent, readOnly = false }) {
