@@ -31,22 +31,6 @@
 
 .kbn-lane-loadmore {
     margin-top: 8px;
-    padding: 6px 8px;
-    border: 1px solid #6b7280;
-    border-radius: 4px;
-    background: #f3f4f6;
-    color: #1f2937;
-    cursor: pointer;
-    transition: background 0.2s ease;
-}
-
-.kbn-lane-loadmore:hover:not(:disabled) {
-    background: #e5e7eb;
-}
-
-.kbn-lane-loadmore:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
 }
 
 .kbn-card {

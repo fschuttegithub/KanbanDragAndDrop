@@ -50,7 +50,11 @@ export function Lane({
                 )}
             </Droppable>
             {typeof onLoadMore === "function" && canLoadMore ? (
-                <button type="button" className="kbn-lane-loadmore" onClick={() => onLoadMore(String(lane.id))}>
+                <button
+                    type="button"
+                    className="btn btn-primary kbn-lane-loadmore"
+                    onClick={() => onLoadMore(String(lane.id))}
+                >
                     {loadMoreLabel}
                 </button>
             ) : null}
