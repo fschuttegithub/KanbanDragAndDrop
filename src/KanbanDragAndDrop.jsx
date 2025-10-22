@@ -306,7 +306,9 @@ export function KanbanDragAndDrop(props) {
             if (fromLane === toLane && fromIdx === toIdx) return;
 
             // Optimistic UI
-            setOptimisticCardsByLane(prev => applyLocalMove(prev, fromLane, toLane, fromIdx, toIdx, String(draggableId)));
+            setOptimisticCardsByLane(prev =>
+                applyLocalMove(prev, fromLane, toLane, fromIdx, toIdx, String(draggableId))
+            );
             pendingMovesRef.current.set(String(draggableId), { toLane, sortKey: toIdx });
             if (fromLane !== toLane && Number.isFinite(visibleBatchSize)) {
                 const currentLimit = visibleCountByLane?.[toLane] ?? visibleBatchSize;
