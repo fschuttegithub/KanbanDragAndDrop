@@ -63,6 +63,19 @@
                         <associationType name="Reference" />
                     </associationTypes>
                 </property>
+                <property key="MaxVisibleCardsPerLane" type="expression" defaultValue="20">
+                    <caption>Max visible cards per lane</caption>
+                    <description>Maximum number of cards to show per lane before revealing the load more option.</description>
+                    <returnType type="Integer" />
+                </property>
+                <property key="MaxVisibleCardsPerLaneText" type="textTemplate">
+                    <caption>Load more label</caption>
+                    <description>Text to display on the load more button for additional cards.</description>
+                    <translations>
+                        <translation lang="en_US">Load more</translation>
+                        <translation lang="nl_NL">Laad meer</translation>
+                    </translations>
+                </property>
             </propertyGroup>
         </propertyGroup>
         <propertyGroup caption="On drop">

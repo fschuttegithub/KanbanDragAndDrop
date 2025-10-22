@@ -5,6 +5,9 @@ import { Card } from "./Card";
 export function Lane({
     lane,
     cards,
+    laneMeta,
+    onLoadMore,
+    loadMoreLabel = "Load more",
     laneContent,
     cardContent,
     enableLaneBottomSheet,
@@ -14,6 +17,8 @@ export function Lane({
     readOnly = false
 }) {
     const header = laneContent?.get?.(lane.mxObj) ?? laneContent ?? `${lane.title ?? "Lane"} (${cards.length})`;
+    const hiddenCount = laneMeta?.hidden ?? 0;
+    const canLoadMore = typeof onLoadMore === "function" && hiddenCount > 0;
 
     const laneWidthStyle =
         typeof lane.widthCss === "string"
@@ -44,6 +49,15 @@ export function Lane({
                     </div>
                 )}
             </Droppable>
+            {typeof onLoadMore === "function" && canLoadMore ? (
+                <button
+                    type="button"
+                    className="kbn-lane-loadmore"
+                    onClick={() => onLoadMore(String(lane.id))}
+                >
+                    {loadMoreLabel}
+                </button>
+            ) : null}
 
             {enableLaneBottomSheet ? (
                 <div className={"kbn-lane-bottom" + (cards.length > 0 ? " kbn-lane-bottom--with-cards" : "")}>

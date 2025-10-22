@@ -65,6 +65,25 @@ export function KanbanDragAndDrop(props) {
         return "500px";
     })();
 
+    const maxVisibleCardsPerLane = useMemo(() => {
+        const raw = resolveWidgetProp(props.MaxVisibleCardsPerLane);
+        if (raw === null || raw === undefined || raw === "") return Infinity;
+        const limit = toNumber(raw);
+        if (!Number.isFinite(limit) || limit <= 0) return Infinity;
+        return Math.floor(limit);
+    }, [props.MaxVisibleCardsPerLane]);
+
+    const visibleBatchSize = Number.isFinite(maxVisibleCardsPerLane) ? Math.max(1, maxVisibleCardsPerLane) : Infinity;
+
+    const loadMoreLabel = useMemo(() => {
+        const raw = resolveWidgetProp(props.MaxVisibleCardsPerLaneText);
+        if (typeof raw === "string") {
+            const trimmed = raw.trim();
+            return trimmed.length > 0 ? trimmed : "Load more";
+        }
+        return "Load more";
+    }, [props.MaxVisibleCardsPerLaneText]);
+
     const getLaneIdFromCard = c => {
         const laneRef = props.cardLaneRef.get(c);
         if (laneRef && (typeof laneRef.id === "string" || typeof laneRef.id === "number")) return String(laneRef.id);
@@ -88,8 +107,46 @@ export function KanbanDragAndDrop(props) {
 
     const laneIdSet = useMemo(() => new Set(lanes.map(l => l.id)), [lanes]);
 
+    const [visibleCountByLane, setVisibleCountByLane] = useState({});
+
+    useEffect(() => {
+        setVisibleCountByLane(prev => {
+            const next = {};
+            let changed = false;
+            const laneIds = new Set(lanes.map(l => l.id));
+            if (!Number.isFinite(visibleBatchSize)) {
+                for (const lane of lanes) {
+                    next[lane.id] = Infinity;
+                    if (!prev || prev[lane.id] !== Infinity) changed = true;
+                }
+            } else {
+                const minVisible = Math.max(1, visibleBatchSize);
+                for (const lane of lanes) {
+                    const prevValue = prev?.[lane.id];
+                    const value = prevValue === undefined ? minVisible : Math.max(prevValue, minVisible);
+                    next[lane.id] = value;
+                    if (prevValue === undefined || value !== prevValue) changed = true;
+                }
+            }
+
+            if (prev) {
+                for (const key of Object.keys(prev)) {
+                    if (!laneIds.has(key)) {
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!changed && prev && Object.keys(prev).length === Object.keys(next).length) {
+                return prev;
+            }
+            return next;
+        });
+    }, [lanes, visibleBatchSize]);
+
     // -------- derive server view (normalize 0..n-1) --------
-    const derivedCardsByLane = useMemo(() => {
+    const serverCardsByLane = useMemo(() => {
         // Start with empty arrays for each lane so empty lanes render correctly
         const out = {};
         for (const l of lanes) out[l.id] = [];
@@ -112,7 +169,7 @@ export function KanbanDragAndDrop(props) {
     }, [props.cards?.items, props.cardSortKeyAttr, props.cardLaneRef, props.onDrop, lanes]);
 
     // -------- optimistic view & pending overlay --------
-    const [viewCardsByLane, setViewCardsByLane] = useState(derivedCardsByLane);
+    const [optimisticCardsByLane, setOptimisticCardsByLane] = useState(serverCardsByLane);
     // Map<cardId, { toLane: string, sortKey: number }>
     const pendingMovesRef = useRef(new Map());
 
@@ -148,15 +205,57 @@ export function KanbanDragAndDrop(props) {
     useEffect(() => {
         if (pendingMovesRef.current.size > 0) {
             for (const [cardId, { toLane, sortKey }] of Array.from(pendingMovesRef.current.entries())) {
-                const laneArr = derivedCardsByLane[toLane] || [];
+                const laneArr = serverCardsByLane[toLane] || [];
                 const serverIdx = laneArr.findIndex(x => x.id === cardId);
                 if (serverIdx === sortKey) pendingMovesRef.current.delete(cardId);
             }
         }
-        if (pendingMovesRef.current.size === 0) setViewCardsByLane(derivedCardsByLane);
-        else setViewCardsByLane(applyPendingOverlay(derivedCardsByLane, pendingMovesRef.current));
+        if (pendingMovesRef.current.size === 0) setOptimisticCardsByLane(serverCardsByLane);
+        else setOptimisticCardsByLane(applyPendingOverlay(serverCardsByLane, pendingMovesRef.current));
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [derivedCardsByLane, props.cards?.items]);
+    }, [serverCardsByLane, props.cards?.items]);
+
+    const { visibleCardsByLane, laneMeta } = useMemo(() => {
+        const visible = {};
+        const meta = {};
+        for (const lane of lanes) {
+            const laneId = lane.id;
+            const all = optimisticCardsByLane[laneId] || [];
+            let limit;
+            if (!Number.isFinite(visibleBatchSize)) {
+                limit = all.length;
+            } else {
+                const configured = visibleCountByLane?.[laneId];
+                limit = configured === undefined ? visibleBatchSize : Math.max(configured, visibleBatchSize);
+                if (!Number.isFinite(limit)) limit = all.length;
+            }
+            const sliceCount = Number.isFinite(limit) ? Math.min(all.length, limit) : all.length;
+            const subset = all.slice(0, sliceCount);
+            const hidden = Math.max(0, all.length - subset.length);
+            visible[laneId] = subset;
+            meta[laneId] = {
+                total: all.length,
+                hidden,
+                visibleCount: subset.length,
+                batchSize: Number.isFinite(visibleBatchSize) ? visibleBatchSize : all.length,
+                canLoadMore: hidden > 0
+            };
+        }
+        return { visibleCardsByLane: visible, laneMeta: meta };
+    }, [lanes, optimisticCardsByLane, visibleBatchSize, visibleCountByLane]);
+
+    const handleLoadMore = useCallback(
+        laneId => {
+            if (!Number.isFinite(visibleBatchSize)) return;
+            setVisibleCountByLane(prev => {
+                const current = prev?.[laneId] ?? visibleBatchSize;
+                const nextValue = current + visibleBatchSize;
+                if (nextValue === current) return prev;
+                return { ...prev, [laneId]: nextValue };
+            });
+        },
+        [visibleBatchSize]
+    );
 
     // -------- derive read-only from microflow security (Option A) --------
     const isReadOnly = useMemo(() => {
@@ -207,8 +306,19 @@ export function KanbanDragAndDrop(props) {
             if (fromLane === toLane && fromIdx === toIdx) return;
 
             // Optimistic UI
-            setViewCardsByLane(prev => applyLocalMove(prev, fromLane, toLane, fromIdx, toIdx, String(draggableId)));
+            setOptimisticCardsByLane(prev => applyLocalMove(prev, fromLane, toLane, fromIdx, toIdx, String(draggableId)));
             pendingMovesRef.current.set(String(draggableId), { toLane, sortKey: toIdx });
+            if (fromLane !== toLane && Number.isFinite(visibleBatchSize)) {
+                const currentLimit = visibleCountByLane?.[toLane] ?? visibleBatchSize;
+                if (toIdx >= currentLimit) {
+                    setVisibleCountByLane(prev => {
+                        const current = prev?.[toLane] ?? visibleBatchSize;
+                        const nextValue = Math.max(current + visibleBatchSize, toIdx + 1);
+                        if (nextValue === current) return prev;
+                        return { ...prev, [toLane]: nextValue };
+                    });
+                }
+            }
 
             // Persist
             const cardItem = (props.cards?.items ?? []).find(i => String(i.id) === String(draggableId));
@@ -232,15 +342,20 @@ export function KanbanDragAndDrop(props) {
             props.laneGuidAttr,
             props.moveTargetLaneGuid,
             props.moveNewSortKey,
-            props.onDrop
+            props.onDrop,
+            visibleBatchSize,
+            visibleCountByLane
         ]
     );
 
     return (
         <Board
             lanes={lanes}
-            cardsByLane={viewCardsByLane}
+            cardsByLane={visibleCardsByLane}
+            laneMetadata={laneMeta}
             onCardMove={onCardMove}
+            onLoadMoreLane={handleLoadMore}
+            loadMoreLabel={loadMoreLabel}
             readOnly={isReadOnly}
             laneWidth={resolvedLaneWidth}
             laneContent={props.laneContent}

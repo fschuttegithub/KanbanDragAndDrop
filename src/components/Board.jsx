@@ -5,7 +5,10 @@ import { Lane } from "./Lane";
 export function Board({
     lanes,
     cardsByLane,
+    laneMetadata = {},
     onCardMove,
+    onLoadMoreLane,
+    loadMoreLabel = "Load more",
     laneWidth,
     laneContent,
     cardContent,
@@ -33,6 +36,9 @@ export function Board({
                         key={lane.id}
                         lane={{ ...lane, widthCss: laneWidth }}
                         cards={cardsByLane[lane.id] || []}
+                        laneMeta={laneMetadata[lane.id]}
+                        onLoadMore={onLoadMoreLane}
+                        loadMoreLabel={loadMoreLabel}
                         laneContent={laneContent}
                         cardContent={cardContent}
                         enableLaneBottomSheet={enableLaneBottomSheet}
