@@ -16,7 +16,8 @@ export function Board({
     laneBottomSheet,
     enableLaneEmptySheet,
     laneEmptySheet,
-    readOnly = false
+    readOnly = false,
+    renderType = "Vertical"
 }) {
     const handleDragEnd = useCallback(
         result => {
@@ -28,9 +29,15 @@ export function Board({
         [onCardMove, readOnly]
     );
 
+    const orientationClass = renderType === "Horizontal" ? "kbn-board--horizontal" : "kbn-board--vertical";
+    const boardClasses = ["kbn-board", orientationClass];
+    if (readOnly) {
+        boardClasses.push("kbn-board--readonly");
+    }
+
     return (
         <DragDropContext onDragEnd={handleDragEnd}>
-            <div className={"kbn-board" + (readOnly ? " kbn-board--readonly" : "")}>
+            <div className={boardClasses.join(" ")}>
                 {lanes.map(lane => (
                     <Lane
                         key={lane.id}
@@ -46,6 +53,7 @@ export function Board({
                         enableLaneEmptySheet={enableLaneEmptySheet}
                         laneEmptySheet={laneEmptySheet}
                         readOnly={readOnly}
+                        renderType={renderType}
                     />
                 ))}
             </div>

@@ -58,11 +58,15 @@ export function KanbanDragAndDrop(props) {
         return v;
     };
 
+    const renderTypeRaw = resolveWidgetProp(props.renderType);
+    const renderType = renderTypeRaw === "Horizontal" ? "Horizontal" : "Vertical";
+    const autoExpandOnDrop = renderType === "Horizontal";
+
     const resolvedLaneWidth = (() => {
         const raw = resolveWidgetProp(props.laneWidth);
-        if (typeof raw === "string") return raw;
+        if (typeof raw === "string" && raw.trim().length > 0) return raw;
         if (typeof raw === "number") return `${raw}px`;
-        return "500px";
+        return renderType === "Horizontal" ? "100%" : "300px";
     })();
 
     const maxVisibleCardsPerLane = useMemo(() => {
@@ -310,7 +314,7 @@ export function KanbanDragAndDrop(props) {
                 applyLocalMove(prev, fromLane, toLane, fromIdx, toIdx, String(draggableId))
             );
             pendingMovesRef.current.set(String(draggableId), { toLane, sortKey: toIdx });
-            if (fromLane !== toLane && Number.isFinite(visibleBatchSize)) {
+            if (autoExpandOnDrop && fromLane !== toLane && Number.isFinite(visibleBatchSize)) {
                 const currentLimit = visibleCountByLane?.[toLane] ?? visibleBatchSize;
                 if (toIdx >= currentLimit) {
                     setVisibleCountByLane(prev => {
@@ -346,7 +350,8 @@ export function KanbanDragAndDrop(props) {
             props.moveNewSortKey,
             props.onDrop,
             visibleBatchSize,
-            visibleCountByLane
+            visibleCountByLane,
+            autoExpandOnDrop
         ]
     );
 
@@ -366,6 +371,7 @@ export function KanbanDragAndDrop(props) {
             laneBottomSheet={props.laneBottomSheet}
             enableLaneEmptySheet={props.enableLaneEmptySheet}
             laneEmptySheet={props.laneEmptySheet}
+            renderType={renderType}
         />
     );
 }

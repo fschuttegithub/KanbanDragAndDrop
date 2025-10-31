@@ -36,21 +36,12 @@
                         <attributeType name="Long" />
                     </attributeTypes>
                 </property>
-                <property key="MaxVisibleCardsPerLaneText" type="textTemplate">
-                    <caption>Load more label</caption>
-                    <description>Text to display on the load more button for additional cards.</description>
-                    <translations>
-                        <translation lang="en_US">Load more</translation>
-                        <translation lang="nl_NL">Laad meer</translation>
-                    </translations>
-                </property>
             </propertyGroup>
             <propertyGroup caption="Cards">
                 <property key="cards" type="datasource" isList="true" required="true">
                     <caption>Car data</caption>
                     <description>Datasource returning Card objects.</description>
                 </property>
-
                 <property key="cardSortKeyAttr" type="attribute" dataSource="cards" required="true">
                     <caption>Card sort key</caption>
                     <description>Order within a lane.</description>
@@ -75,6 +66,14 @@
                     <caption>Max visible cards per lane</caption>
                     <description>Maximum number of cards to show per lane before revealing the load more option.</description>
                     <returnType type="Integer" />
+                </property>
+                <property key="MaxVisibleCardsPerLaneText" type="textTemplate">
+                    <caption>Load more label</caption>
+                    <description>Text to display on the load more button for additional cards.</description>
+                    <translations>
+                        <translation lang="en_US">Load more</translation>
+                        <translation lang="nl_NL">Laad meer</translation>
+                    </translations>
                 </property>
             </propertyGroup>
         </propertyGroup>
@@ -112,6 +111,15 @@
             </property>
         </propertyGroup>
         <propertyGroup caption="Layout">
+            <property key="renderType" type="enumeration" defaultValue="Vertical">
+                <caption>Render type</caption>
+                <description>Determines whether the view will be rendered vertically or horizontally
+                </description>
+                <enumerationValues>
+                    <enumerationValue key="Vertical">Vertical</enumerationValue>
+                    <enumerationValue key="Horizontal">Horizontal</enumerationValue>
+                </enumerationValues>
+            </property>
             <property key="laneWidth" type="expression" defaultValue="300px">
                 <caption>Lane width (CSS)</caption>
                 <description>Width of each lane. Accepts CSS values like "500px", "40%"
