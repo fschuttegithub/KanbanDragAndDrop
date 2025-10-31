@@ -2,19 +2,58 @@
 .kbn-board {
     display: flex;
     gap: 16px;
-    align-items: flex-start;
-    overflow-x: auto; /* Only the board is horizontally scrollable */
     width: 100%;
+}
+
+.kbn-board--vertical {
+    flex-direction: row;
+    align-items: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.kbn-board--horizontal {
+    flex-direction: column;
+    align-items: stretch;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .kbn-lane {
     background: #d4d4d4;
     border-radius: 8px;
     padding: 8px;
-    /* Do NOT set overflow here! */
-    flex: 0 0 var(--lane-width, 300px);
     display: flex;
     flex-direction: column;
+    gap: 8px;
+    flex: 0 0 auto;
+    width: 100%;
+}
+
+.kbn-board--vertical .kbn-lane {
+    width: auto;
+    flex: 0 0 var(--lane-width, 300px);
+}
+
+.kbn-board--horizontal .kbn-lane {
+    width: var(--lane-width, 100%);
+}
+
+.kbn-lane-body {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+}
+
+.kbn-lane-body--vertical {
+    flex-direction: column;
+}
+
+.kbn-lane-body--horizontal {
+    flex-direction: row;
+    align-items: flex-start;
+    flex-wrap: nowrap;
+    gap: 8px;
 }
 
 .kbn-lane-title {
@@ -27,10 +66,23 @@
     flex-direction: column;
     gap: 8px;
     min-height: 1px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.kbn-lane-body--horizontal .kbn-lane-cards {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
 }
 
 .kbn-lane-loadmore {
     margin-top: 8px;
+}
+
+.kbn-lane-body--horizontal .kbn-lane-loadmore {
+    margin-top: 0;
+    align-self: center;
 }
 
 .kbn-card {
@@ -54,6 +106,10 @@
 
 .kbn-lane-bottom.kbn-lane-bottom--with-cards {
     margin-top: 8px;
+}
+
+.kbn-lane-body--horizontal .kbn-lane-bottom {
+    margin-top: 0;
 }
 
 .kbn-board--readonly .kbn-card {
