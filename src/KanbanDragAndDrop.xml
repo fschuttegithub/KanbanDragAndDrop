@@ -62,14 +62,27 @@
                         <associationType name="Reference" />
                     </associationTypes>
                 </property>
-                <property key="MaxVisibleCardsPerLane" type="expression" defaultValue="20">
-                    <caption>Max visible cards per lane</caption>
-                    <description>Maximum number of cards to show per lane before revealing the load more option.</description>
+                <property key="initialCardLimit" type="expression" defaultValue="100">
+                    <caption>Initial card limit</caption>
+                    <description>Number of cards fetched first load (board-wide). Keep this to a few pages worth of cards for best performance with large boards.</description>
                     <returnType type="Integer" />
                 </property>
-                <property key="MaxVisibleCardsPerLaneText" type="textTemplate">
+                <property key="loadMoreBatchSize" type="expression" defaultValue="20">
+                    <caption>Load more batch size</caption>
+                    <description>How many additional cards to fetch each time "load more" is triggered.</description>
+                    <returnType type="Integer" />
+                </property>
+                <property key="loadMoreMode" type="enumeration" defaultValue="LaneButtons">
+                    <caption>Load more mode</caption>
+                    <description>How to reveal additional cards.</description>
+                    <enumerationValues>
+                        <enumerationValue key="LaneButtons">Load more button</enumerationValue>
+                        <enumerationValue key="AutoScroll">Auto-load on scroll</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="loadMoreLabel" type="textTemplate">
                     <caption>Load more label</caption>
-                    <description>Text to display on the load more button for additional cards.</description>
+                    <description>Text shown on the load more button (used in "Load more button" mode).</description>
                     <translations>
                         <translation lang="en_US">Load more</translation>
                         <translation lang="nl_NL">Laad meer</translation>
@@ -122,8 +135,13 @@
             </property>
             <property key="laneWidth" type="expression" defaultValue="300px">
                 <caption>Lane width (CSS)</caption>
-                <description>Width of each lane. Accepts CSS values like "500px", "40%"
+                <description>Width of each lane. Accepts CSS values like "500px", "40%".
                 </description>
+                <returnType type="String" />
+            </property>
+            <property key="laneBodyHeight" type="expression" defaultValue="600px">
+                <caption>Lane body height (CSS)</caption>
+                <description>Height of each lane's scrollable card area. Accepts CSS values like "600px", "80vh" or "calc(100% - 70px)".</description>
                 <returnType type="String" />
             </property>
                 <property key="enableLaneBottomSheet" type="boolean" defaultValue="false">

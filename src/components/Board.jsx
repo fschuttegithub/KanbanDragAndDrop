@@ -1,15 +1,18 @@
-import { createElement, useCallback } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Lane } from "./Lane";
+import { useCallback } from "react";
 
 export function Board({
     lanes,
     cardsByLane,
-    laneMetadata = {},
     onCardMove,
-    onLoadMoreLane,
+    onLoadMore,
     loadMoreLabel = "Load more",
+    loadMoreMode = "LaneButtons",
+    hasMore = false,
+    isLoadingMore = false,
     laneWidth,
+    laneBodyHeight,
     laneContent,
     cardContent,
     enableLaneBottomSheet,
@@ -43,9 +46,12 @@ export function Board({
                         key={lane.id}
                         lane={{ ...lane, widthCss: laneWidth }}
                         cards={cardsByLane[lane.id] || []}
-                        laneMeta={laneMetadata[lane.id]}
-                        onLoadMore={onLoadMoreLane}
+                        onLoadMore={onLoadMore}
                         loadMoreLabel={loadMoreLabel}
+                        loadMoreMode={loadMoreMode}
+                        hasMore={hasMore}
+                        isLoadingMore={isLoadingMore}
+                        laneBodyHeight={laneBodyHeight}
                         laneContent={laneContent}
                         cardContent={cardContent}
                         enableLaneBottomSheet={enableLaneBottomSheet}

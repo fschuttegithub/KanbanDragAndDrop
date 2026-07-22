@@ -7,6 +7,10 @@ export function getProperties(values, defaultProps) {
     if (!values.enableLaneEmptySheet) {
         hidePropertyIn(defaultProps, values, "laneEmptySheet");
     }
+    // The load more label only applies to the button mode.
+    if (values.loadMoreMode === "AutoScroll") {
+        hidePropertyIn(defaultProps, values, "loadMoreLabel");
+    }
     return defaultProps;
 }
 
