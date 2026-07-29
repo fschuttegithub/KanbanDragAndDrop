@@ -61,33 +61,21 @@
     padding: 4px 8px;
 }
 
-/* Virtualized scroll viewport: bounded size so react-window can window rows. */
-.kbn-lane-cards-viewport {
-    flex: 1 1 auto;
-    width: 100%;
-    min-width: 0;
-    min-height: 1px;
-}
-
 .kbn-lane-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     min-height: 1px;
     min-width: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
 }
 
-/* Each card sits in a "slot" that react-window positions and measures. The
-   slot's padding is the inter-card gap and is part of the measured size, so
-   variable-height cards never overlap. */
-.kbn-card-slot {
-    box-sizing: border-box;
-}
-
-.kbn-card-slot--height {
-    padding-bottom: 8px;
-}
-
-.kbn-card-slot--width {
-    padding-right: 8px;
-    height: 100%;
+.kbn-lane-body--horizontal .kbn-lane-cards {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .kbn-lane-empty {

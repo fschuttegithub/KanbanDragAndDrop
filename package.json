@@ -1,7 +1,7 @@
 {
   "name": "kanbandraganddrop",
   "widgetName": "KanbanDragAndDrop",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "",
   "copyright": "Kobeon B.V.",
   "author": "Frank Schutte",
@@ -30,9 +30,7 @@
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
     "big.js": "^7.0.1",
-    "classnames": "^2.2.6",
-    "react-virtualized-auto-sizer": "^1.0.24",
-    "react-window": "^1.8.10"
+    "classnames": "^2.2.6"
   },
   "resolutions": {
     "react": "^19.0.0",

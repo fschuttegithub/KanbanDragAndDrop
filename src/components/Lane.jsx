@@ -1,28 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import AutoSizer from "react-virtualized-auto-sizer";
+import { useCallback, useRef } from "react";
 import { Card } from "./Card";
 import { Droppable } from "@hello-pangea/dnd";
-import { VariableSizeList } from "react-window";
 
-const DEFAULT_ROW_SIZE = 80;
-
-// Module-scope row so the list doesn't remount rows on every parent render.
-function VirtualRow({ data, index, style }) {
-    const card = data.cards[index];
-    // Extra slot rendered while a card hovers over an empty/short list.
-    if (!card) return null;
-    return (
-        <Card
-            card={card}
-            index={index}
-            cardContent={data.cardContent}
-            readOnly={data.readOnly}
-            style={style}
-            onMeasure={data.setRowSize}
-            measureAxis={data.horizontal ? "width" : "height"}
-        />
-    );
-}
+// Distance (px) from the end at which auto-scroll fetches the next batch.
+const AUTO_LOAD_THRESHOLD = 48;
 
 export function Lane({
     lane,
@@ -58,53 +39,26 @@ export function Lane({
     const laneClassName = `kbn-lane kbn-lane--${orientation}`;
     const laneBodyClassName = `kbn-lane-body kbn-lane-body--${orientation}`;
 
-    // -------- measured row sizes for the variable-size virtual list --------
-    const listRef = useRef(null);
-    const sizeMapRef = useRef(new Map());
-
-    const setRowSize = useCallback(
-        (cardId, size) => {
-            if (!(size > 0)) return;
-            if (sizeMapRef.current.get(cardId) === size) return;
-            sizeMapRef.current.set(cardId, size);
-            const idx = cards.findIndex(c => c.id === cardId);
-            listRef.current?.resetAfterIndex(idx >= 0 ? idx : 0);
-        },
-        [cards]
-    );
-
-    const getItemSize = useCallback(
-        index => {
-            const card = cards[index];
-            if (!card) return DEFAULT_ROW_SIZE; // placeholder slot
-            return sizeMapRef.current.get(card.id) ?? DEFAULT_ROW_SIZE;
-        },
-        [cards]
-    );
-
-    // Card order/content changed: recompute positions from the top.
-    useEffect(() => {
-        listRef.current?.resetAfterIndex(0);
-    }, [cards]);
-
-    const itemData = useMemo(
-        () => ({ cards, cardContent, readOnly, setRowSize, horizontal }),
-        [cards, cardContent, readOnly, setRowSize, horizontal]
-    );
-
-    // Auto-load-on-scroll: when the last card scrolls into view, fetch the next
-    // batch. Guarded by the current length so it fires at most once per batch.
+    // -------- auto-load-on-scroll --------
+    const scrollRef = useRef(null);
+    // Guards against firing more than once per loaded batch.
     const requestedAtLenRef = useRef(-1);
-    const handleItemsRendered = useCallback(
-        ({ visibleStopIndex }) => {
-            if (!autoLoad || !hasMore || isLoadingMore || typeof onLoadMore !== "function") return;
-            if (visibleStopIndex < cards.length - 1) return; // not at the end yet
-            if (requestedAtLenRef.current === cards.length) return; // already asked at this length
-            requestedAtLenRef.current = cards.length;
-            onLoadMore(String(lane.id));
-        },
-        [autoLoad, hasMore, isLoadingMore, onLoadMore, cards.length, lane.id]
-    );
+
+    const requestLoad = useCallback(() => {
+        if (requestedAtLenRef.current === cards.length) return;
+        requestedAtLenRef.current = cards.length;
+        onLoadMore(String(lane.id));
+    }, [cards.length, onLoadMore, lane.id]);
+
+    const handleScroll = useCallback(() => {
+        if (!autoLoad || !hasMore || isLoadingMore || typeof onLoadMore !== "function") return;
+        const el = scrollRef.current;
+        if (!el) return;
+        const nearEnd = horizontal
+            ? el.scrollLeft + el.clientWidth >= el.scrollWidth - AUTO_LOAD_THRESHOLD
+            : el.scrollTop + el.clientHeight >= el.scrollHeight - AUTO_LOAD_THRESHOLD;
+        if (nearEnd) requestLoad();
+    }, [autoLoad, hasMore, isLoadingMore, onLoadMore, horizontal, requestLoad]);
 
     const loadMoreButton = showLaneButton ? (
         <button
@@ -130,64 +84,37 @@ export function Lane({
             <div className="kbn-lane-empty">{laneEmptySheet?.get?.(lane.mxObj) ?? laneEmptySheet}</div>
         ) : null;
 
-    const renderClone = (provided, snapshot, rubric) => {
-        const card = cards[rubric.source.index];
-        const body =
-            card?.mxObj && cardContent?.get
-                ? cardContent.get(card.mxObj)
-                : cardContent ?? card?.title ?? String(card?.id ?? "");
-        return (
-            <div
-                ref={provided.innerRef}
-                {...provided.draggableProps}
-                {...provided.dragHandleProps}
-                style={provided.draggableProps.style}
-                className="kbn-card kbn-card--dragging"
-            >
-                {body}
-            </div>
-        );
-    };
+    const cardsStyle = horizontal ? undefined : { maxHeight: laneBodyHeight };
 
     return (
         <div className={laneClassName} style={{ "--lane-width": laneWidthStyle }}>
             <div className="kbn-lane-title">{header}</div>
             <div className={laneBodyClassName}>
                 {emptySheetContent}
-                <Droppable
-                    droppableId={String(lane.id)}
-                    type="CARD"
-                    direction={orientation}
-                    mode="virtual"
-                    isDropDisabled={readOnly}
-                    renderClone={renderClone}
-                >
-                    {(provided, snapshot) => {
-                        const itemCount = snapshot.isUsingPlaceholder ? cards.length + 1 : cards.length;
-                        return (
-                            <div className="kbn-lane-cards-viewport" style={{ height: laneBodyHeight }}>
-                                <AutoSizer>
-                                    {({ height, width }) => (
-                                        <VariableSizeList
-                                            ref={listRef}
-                                            className="kbn-lane-cards"
-                                            height={height || 600}
-                                            width={width || "100%"}
-                                            layout={horizontal ? "horizontal" : "vertical"}
-                                            itemCount={itemCount}
-                                            itemSize={getItemSize}
-                                            estimatedItemSize={DEFAULT_ROW_SIZE}
-                                            outerRef={provided.innerRef}
-                                            itemData={itemData}
-                                            onItemsRendered={handleItemsRendered}
-                                        >
-                                            {VirtualRow}
-                                        </VariableSizeList>
-                                    )}
-                                </AutoSizer>
-                            </div>
-                        );
-                    }}
+                <Droppable droppableId={String(lane.id)} type="CARD" direction={orientation} isDropDisabled={readOnly}>
+                    {provided => (
+                        <div
+                            ref={node => {
+                                scrollRef.current = node;
+                                provided.innerRef(node);
+                            }}
+                            {...provided.droppableProps}
+                            className="kbn-lane-cards"
+                            style={cardsStyle}
+                            onScroll={autoLoad ? handleScroll : undefined}
+                        >
+                            {cards.map((card, index) => (
+                                <Card
+                                    key={card.id}
+                                    card={card}
+                                    index={index}
+                                    cardContent={cardContent}
+                                    readOnly={readOnly}
+                                />
+                            ))}
+                            {provided.placeholder}
+                        </div>
+                    )}
                 </Droppable>
                 {loadMoreButton}
                 {autoLoadIndicator}
