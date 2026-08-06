@@ -11,6 +11,8 @@ export function Board({
     loadMoreMode = "LaneButtons",
     hasMore = false,
     isLoadingMore = false,
+    loadedCount = 0,
+    minCardsPerLane = 0,
     laneWidth,
     laneBodyHeight,
     laneContent,
@@ -51,6 +53,8 @@ export function Board({
                         loadMoreMode={loadMoreMode}
                         hasMore={hasMore}
                         isLoadingMore={isLoadingMore}
+                        loadedCount={loadedCount}
+                        minCardsPerLane={minCardsPerLane}
                         laneBodyHeight={laneBodyHeight}
                         laneContent={laneContent}
                         cardContent={cardContent}

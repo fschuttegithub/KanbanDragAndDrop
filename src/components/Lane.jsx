@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Card } from "./Card";
 import { Droppable } from "@hello-pangea/dnd";
 
@@ -13,6 +13,8 @@ export function Lane({
     loadMoreMode = "LaneButtons",
     hasMore = false,
     isLoadingMore = false,
+    loadedCount = 0,
+    minCardsPerLane = 0,
     laneBodyHeight = "600px",
     laneContent,
     cardContent,
@@ -23,7 +25,24 @@ export function Lane({
     readOnly = false,
     renderType = "Vertical"
 }) {
-    const header = laneContent?.get?.(lane.mxObj) ?? laneContent ?? `${lane.title ?? "Lane"} (${cards.length})`;
+    // totalCount is null when laneCardCountAttr isn't configured — fall back to what's loaded.
+    const totalCount = typeof lane.totalCount === "number" ? lane.totalCount : null;
+    // A lane is only "genuinely empty" once we know its real total is 0. If the total is
+    // unknown, or is known but higher than what's loaded, treat it as "not yet loaded"
+    // rather than empty — this lane still has cards pending, it's just that the board-wide
+    // paging window hasn't reached them yet.
+    const isPendingLoad = cards.length === 0 && (totalCount === null || totalCount > 0);
+    const isGenuinelyEmpty = cards.length === 0 && totalCount === 0;
+    // Only auto-trigger a load when we have confirmed (via the count attribute) that this
+    // lane actually has more cards to give — an unknown total isn't grounds to keep fetching,
+    // and neither is a lane that's already fully loaded (even if below minCardsPerLane).
+    // A lane with too few loaded cards has no scrollbar of its own to trigger further loads,
+    // so it keeps auto-requesting until it reaches minCardsPerLane (or runs out of cards).
+    const needsAutoLoad = totalCount !== null && cards.length < totalCount && cards.length < minCardsPerLane;
+
+    const countLabel =
+        totalCount !== null && totalCount !== cards.length ? `${cards.length}/${totalCount}` : `${cards.length}`;
+    const header = laneContent?.get?.(lane.mxObj) ?? laneContent ?? `${lane.title ?? "Lane"} (${countLabel})`;
     const showLaneButton = loadMoreMode === "LaneButtons" && typeof onLoadMore === "function" && hasMore;
     const autoLoad = loadMoreMode === "AutoScroll";
 
@@ -60,6 +79,40 @@ export function Lane({
         if (nearEnd) requestLoad();
     }, [autoLoad, hasMore, isLoadingMore, onLoadMore, horizontal, requestLoad]);
 
+    // -------- auto-load for lanes that can't be scrolled --------
+    // A lane with too few cards (below minCardsPerLane) may not overflow its container,
+    // so handleScroll above can never fire for it. When the count attribute confirms more
+    // cards are pending, request a load directly. Guarded on loadedCount (bumps once per
+    // completed fetch) rather than isLoadingMore alone, since status may not flip
+    // synchronously with the request.
+    // Once a lane reaches its floor, latch it — paging here is a single board-wide window,
+    // so re-requesting isn't a cheap per-lane top-up, it reloads the whole board. Without
+    // this latch, a card dragged out of an already-settled lane (dropping it back under
+    // the floor) would keep re-triggering full-board reloads on every ordinary drag-and-drop.
+    const settledRef = useRef(false);
+    const lastAutoRequestedCountRef = useRef(-1);
+    useEffect(() => {
+        const floor = totalCount !== null ? Math.min(minCardsPerLane, totalCount) : minCardsPerLane;
+        if (cards.length >= floor) settledRef.current = true;
+        if (settledRef.current) return;
+        if (!autoLoad || !needsAutoLoad || !hasMore || isLoadingMore) return;
+        if (typeof onLoadMore !== "function") return;
+        if (lastAutoRequestedCountRef.current === loadedCount) return;
+        lastAutoRequestedCountRef.current = loadedCount;
+        onLoadMore(String(lane.id));
+    }, [
+        autoLoad,
+        needsAutoLoad,
+        hasMore,
+        isLoadingMore,
+        loadedCount,
+        onLoadMore,
+        lane.id,
+        cards.length,
+        minCardsPerLane,
+        totalCount
+    ]);
+
     const loadMoreButton = showLaneButton ? (
         <button
             type="button"
@@ -80,9 +133,11 @@ export function Lane({
     ) : null;
 
     const emptySheetContent =
-        cards.length === 0 && enableLaneEmptySheet ? (
+        isGenuinelyEmpty && enableLaneEmptySheet ? (
             <div className="kbn-lane-empty">{laneEmptySheet?.get?.(lane.mxObj) ?? laneEmptySheet}</div>
         ) : null;
+
+    const pendingLoadIndicator = isPendingLoad && hasMore ? <div className="kbn-lane-pending">Loading…</div> : null;
 
     const cardsStyle = horizontal ? undefined : { maxHeight: laneBodyHeight };
 
@@ -91,6 +146,7 @@ export function Lane({
             <div className="kbn-lane-title">{header}</div>
             <div className={laneBodyClassName}>
                 {emptySheetContent}
+                {pendingLoadIndicator}
                 <Droppable droppableId={String(lane.id)} type="CARD" direction={orientation} isDropDisabled={readOnly}>
                     {provided => (
                         <div

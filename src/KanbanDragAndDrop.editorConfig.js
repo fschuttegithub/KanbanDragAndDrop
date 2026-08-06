@@ -10,6 +10,8 @@ export function getProperties(values, defaultProps) {
     // The load more label only applies to the button mode.
     if (values.loadMoreMode === "AutoScroll") {
         hidePropertyIn(defaultProps, values, "loadMoreLabel");
+    } else {
+        hidePropertyIn(defaultProps, values, "minCardsPerLane");
     }
     return defaultProps;
 }

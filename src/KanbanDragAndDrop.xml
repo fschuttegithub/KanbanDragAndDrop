@@ -36,6 +36,14 @@
                         <attributeType name="Long" />
                     </attributeTypes>
                 </property>
+                <property key="laneCardCountAttr" type="attribute" dataSource="lanes" required="true">
+                    <caption>Lane card count</caption>
+                    <description>Attribute holding the total number of cards that belong to this lane (e.g. an aggregate attribute). Lets the widget tell a genuinely empty lane apart from a lane whose cards simply haven't been fetched yet.</description>
+                    <attributeTypes>
+                        <attributeType name="Integer" />
+                        <attributeType name="Long" />
+                    </attributeTypes>
+                </property>
             </propertyGroup>
             <propertyGroup caption="Cards">
                 <property key="cards" type="datasource" isList="true" required="true">
@@ -80,6 +88,11 @@
                         <enumerationValue key="AutoScroll">Auto-load on scroll</enumerationValue>
                     </enumerationValues>
                 </property>
+                <property key="minCardsPerLane" type="expression" defaultValue="5">
+                    <caption>Minimum cards per lane</caption>
+                    <description>Used in "Auto-load on scroll" mode. A lane with fewer loaded cards than this (but with more available, per "Lane card count") has no scrollbar to trigger a load, so it keeps auto-loading until it reaches this minimum. Set to 0 to disable.</description>
+                    <returnType type="Integer" />
+                </property>
                 <property key="loadMoreLabel" type="textTemplate">
                     <caption>Load more label</caption>
                     <description>Text shown on the load more button (used in "Load more button" mode).</description>
@@ -102,8 +115,7 @@
             </property>
             <property key="moveNewSortKey" type="attribute" required="true">
                 <caption>New sort key</caption>
-                <description>Attribute (decimal) to receive the new sort key for the card.
-                </description>
+                <description>Attribute (decimal) to receive the new sort key for the card.</description>
                 <attributeTypes>
                     <attributeType name="Decimal" />
                 </attributeTypes>
@@ -126,8 +138,7 @@
         <propertyGroup caption="Layout">
             <property key="renderType" type="enumeration" defaultValue="Vertical">
                 <caption>Render type</caption>
-                <description>Determines whether the view will be rendered vertically or horizontally
-                </description>
+                <description>Determines whether the view will be rendered vertically or horizontally</description>
                 <enumerationValues>
                     <enumerationValue key="Vertical">Vertical</enumerationValue>
                     <enumerationValue key="Horizontal">Horizontal</enumerationValue>
@@ -135,8 +146,7 @@
             </property>
             <property key="laneWidth" type="expression" defaultValue="300px">
                 <caption>Lane width (CSS)</caption>
-                <description>Width of each lane. Accepts CSS values like "500px", "40%".
-                </description>
+                <description>Width of each lane. Accepts CSS values like "500px", "40%".</description>
                 <returnType type="String" />
             </property>
             <property key="laneBodyHeight" type="expression" defaultValue="600px">
@@ -144,14 +154,14 @@
                 <description>Height of each lane's scrollable card area. Accepts CSS values like "600px", "80vh" or "calc(100% - 70px)".</description>
                 <returnType type="String" />
             </property>
-                <property key="enableLaneBottomSheet" type="boolean" defaultValue="false">
-                    <caption>Enable footer</caption>
-                    <description>Show a custom section at the bottom of each lane.</description>
-                </property>
-                <property key="enableLaneEmptySheet" type="boolean" defaultValue="false">
-                    <caption>Enable empty section</caption>
-                    <description>Show a custom section when there are no cards in the lane.</description>
-                </property>
+            <property key="enableLaneBottomSheet" type="boolean" defaultValue="false">
+                <caption>Enable footer</caption>
+                <description>Show a custom section at the bottom of each lane.</description>
+            </property>
+            <property key="enableLaneEmptySheet" type="boolean" defaultValue="false">
+                <caption>Enable empty section</caption>
+                <description>Show a custom section when there are no cards in the lane.</description>
+            </property>
             <property key="laneEmptySheet" type="widgets" dataSource="lanes">
                 <caption>Empty sheet content (Lane)</caption>
                 <description>Section to place custom content when lane is empty.</description>

@@ -48,6 +48,13 @@ const toPositiveInt = (v, fallback) => {
     return Math.floor(n);
 };
 
+// Unlike toPositiveInt, 0 is a valid (explicit "disabled") value here.
+const toNonNegativeInt = (v, fallback) => {
+    const n = toNumber(v);
+    if (!Number.isFinite(n) || n < 0) return fallback;
+    return Math.floor(n);
+};
+
 export function KanbanDragAndDrop(props) {
     const lanesReady = props.lanes?.status === "available";
     const cardsReady = props.cards?.status === "available";
@@ -76,6 +83,10 @@ export function KanbanDragAndDrop(props) {
     const loadMoreBatchSize = useMemo(
         () => toPositiveInt(resolveWidgetProp(props.loadMoreBatchSize), 50),
         [props.loadMoreBatchSize]
+    );
+    const minCardsPerLane = useMemo(
+        () => toNonNegativeInt(resolveWidgetProp(props.minCardsPerLane), 5),
+        [props.minCardsPerLane]
     );
 
     const loadMoreLabel = useMemo(() => {
@@ -141,13 +152,48 @@ export function KanbanDragAndDrop(props) {
         const arr = items.map((l, index) => {
             const raw = props.laneSortKeyAttr?.get?.(l)?.value;
             const sortKey = toNumber(raw);
-            return { id: String(l.id), index, sortKey, mxObj: l };
+            // null = property not configured, so callers can fall back to cards.length.
+            const totalCount = props.laneCardCountAttr ? toNumber(props.laneCardCountAttr.get(l)?.value) : null;
+            return { id: String(l.id), index, sortKey, totalCount, mxObj: l };
         });
         arr.sort((a, b) => (a.sortKey ?? 0) - (b.sortKey ?? 0) || String(a.id).localeCompare(String(b.id)));
         return arr;
-    }, [props.lanes?.items, props.laneSortKeyAttr]);
+    }, [props.lanes?.items, props.laneSortKeyAttr, props.laneCardCountAttr]);
 
     const laneIdSet = useMemo(() => new Set(lanes.map(l => l.id)), [lanes]);
+
+    // -------- optimistic lane counts --------
+    // laneCardCountAttr may be backed by a heavier microflow that recomputes on its own
+    // schedule, so it can lag behind an in-flight card move. Adjust the displayed total
+    // locally the moment a move happens, rather than waiting on (or depending on) that
+    // refresh landing before the count looks right.
+    // { [laneId]: { delta: number, baselineRaw: number } } — kept in state (not a ref) since
+    // it's read during render to build displayLanes.
+    const [laneCountDeltas, setLaneCountDeltas] = useState({});
+
+    const applyLaneCountDelta = (laneId, delta, rawTotalCount) => {
+        if (typeof rawTotalCount !== "number") return; // laneCardCountAttr not configured for this lane
+        setLaneCountDeltas(prev => {
+            const existing = prev[laneId];
+            // If the server value has moved on since we last touched this lane, it's already
+            // caught up — start a fresh baseline instead of stacking onto a stale delta.
+            const stillFresh = existing?.baselineRaw === rawTotalCount;
+            const baselineRaw = stillFresh ? existing.baselineRaw : rawTotalCount;
+            const priorDelta = stillFresh ? existing.delta : 0;
+            return { ...prev, [laneId]: { delta: priorDelta + delta, baselineRaw } };
+        });
+    };
+
+    // No effect needed to prune stale deltas: displayLanes below simply ignores any delta
+    // whose baseline no longer matches the current server value, treating it as caught up.
+    const displayLanes = useMemo(() => {
+        if (Object.keys(laneCountDeltas).length === 0) return lanes;
+        return lanes.map(l => {
+            const pending = laneCountDeltas[l.id];
+            if (!pending || typeof l.totalCount !== "number" || l.totalCount !== pending.baselineRaw) return l;
+            return { ...l, totalCount: Math.max(0, l.totalCount + pending.delta) };
+        });
+    }, [lanes, laneCountDeltas]);
 
     // -------- derive server view (preserve real Decimal sort keys) --------
     const serverCardsByLane = useMemo(() => {
@@ -224,6 +270,9 @@ export function KanbanDragAndDrop(props) {
     // Paging is board-wide, so "more to load" is a single board-level signal.
     const boardHasMore = !!props.cards?.hasMoreItems;
     const isLoadingMore = props.cards?.status === "loading";
+    // Changes exactly once per completed fetch — lets a lane-level auto-load-more
+    // guard against re-firing until a new batch has actually landed.
+    const loadedCardCount = props.cards?.items?.length ?? 0;
     const visibleCardsByLane = useMemo(() => {
         const visible = {};
         for (const lane of lanes) {
@@ -296,6 +345,11 @@ export function KanbanDragAndDrop(props) {
             );
             pendingMovesRef.current.set(cardId, { toLane, index: toIdx, sortKey: newKey });
 
+            if (fromLane !== toLane) {
+                applyLaneCountDelta(fromLane, -1, lanes.find(l => l.id === fromLane)?.totalCount);
+                applyLaneCountDelta(toLane, 1, lanes.find(l => l.id === toLane)?.totalCount);
+            }
+
             // Persist
             const cardItem = (props.cards?.items ?? []).find(i => String(i.id) === cardId);
             if (!cardItem) return;
@@ -314,6 +368,7 @@ export function KanbanDragAndDrop(props) {
         [
             isReadOnly,
             laneIdSet,
+            lanes,
             displayedCardsByLane,
             props.cards?.items,
             props.lanes?.items,
@@ -351,7 +406,7 @@ export function KanbanDragAndDrop(props) {
 
     return (
         <Board
-            lanes={lanes}
+            lanes={displayLanes}
             cardsByLane={visibleCardsByLane}
             onCardMove={onCardMove}
             onLoadMore={handleLoadMore}
@@ -359,6 +414,8 @@ export function KanbanDragAndDrop(props) {
             loadMoreMode={loadMoreMode}
             hasMore={boardHasMore}
             isLoadingMore={isLoadingMore}
+            loadedCount={loadedCardCount}
+            minCardsPerLane={minCardsPerLane}
             readOnly={isReadOnly}
             laneWidth={resolvedLaneWidth}
             laneBodyHeight={laneBodyHeight}

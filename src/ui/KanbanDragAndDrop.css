@@ -82,6 +82,14 @@
     flex: 0 0 auto;
 }
 
+.kbn-lane-pending {
+    flex: 0 0 auto;
+    text-align: center;
+    padding: 8px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
 .kbn-lane-loadmore {
     margin-top: 8px;
 }
